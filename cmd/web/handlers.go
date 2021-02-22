@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"masrurimz/snippetbox/pkg/models"
 	"net/http"
 	"strconv"
 )
@@ -56,9 +57,18 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s, err := app.snippets.Get(id)
+	if err == models.ErrNoRecord {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	// Use the fmt.Fprintf() function to interpolate the id value with our response
 	// and write it to the http.ResponseWriter.
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	fmt.Fprintf(w, "%v", s)
 }
 
 // Add a createSnippet handler function.
