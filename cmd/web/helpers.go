@@ -5,7 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
+
+func (app *application) addDefauldData(td *templateData, r *http.Request) *templateData {
+	if td == nil {
+		td = &templateData{}
+	}
+
+	td.CurrentYear = time.Now().Year()
+
+	return td
+}
 
 // The serverError helper writes an error message and stack trace to the errorLog,
 // then sends a generic 500 Internal Server Error response to the user.
@@ -43,7 +54,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 
 	// Render template with dynamic data to buffer
 	buf := new(bytes.Buffer)
-	err := ts.Execute(buf, td)
+	err := ts.Execute(buf, app.addDefauldData(td, r))
 	if err != nil {
 		app.serverError(w, err)
 		return
