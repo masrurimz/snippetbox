@@ -67,7 +67,14 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ 
 
 	// Do Validation
 	if err := models.ValidateSnippet(snippet); err != nil {
-		fmt.Fprint(w, err)
+		app.render(w, r, "create.page.tmpl", &templateData{
+			FormData: r.PostForm,
+			FormErrors: map[string]string{
+				"title":   err["SnippetValidator.Title"],
+				"content": err["SnippetValidator.Content"],
+				"expires": err["SnippetValidator.Expires"],
+			},
+		})
 		return
 	}
 
