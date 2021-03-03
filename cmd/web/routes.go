@@ -14,14 +14,9 @@ func (app *application) routes() http.Handler {
 
 	mux := httprouter.New()
 	mux.GET("/", app.home)
-	mux.GET("/snippet/:id", app.showSnippet)
-	mux.GET("/snippets/create", app.createSnippetForm)
-	mux.POST("/snippets/create", app.createSnippet)
-
-	// mux := http.NewServeMux()
-	// mux.HandleFunc("/", app.home)
-	// mux.HandleFunc("/snippet", app.showSnippet)
-	// mux.HandleFunc("/snippet/create", app.createSnippet)
+	mux.GET("/snippet/show/:id", app.showSnippet)
+	mux.GET("/snippet/create", app.createSnippetForm)
+	mux.POST("/snippet/create", app.createSnippet)
 
 	// Create a file server which serves files out of the "./ui/static" directory.
 	// Note that the path given to the http.Dir function is relative to the project // directory root.
