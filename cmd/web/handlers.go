@@ -67,7 +67,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ 
 
 	// Do Validation
 	if err := models.ValidateSnippet(snippet); err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, err)
 		return
 	}
 
