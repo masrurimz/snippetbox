@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"masrurimz/snippetbox/pkg/models"
 	"net/http"
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+
+	"masrurimz/snippetbox/pkg/models"
 )
 
 // Define a home handler function which writes a byte slice containing
@@ -14,15 +15,6 @@ import (
 // Change the signature of the home handler so it is defined as a method against
 // *application.
 func (app *application) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	// Check if the current request URL path exactly matches "/". If it doesn't, use
-	// the http.NotFound() function to send a 404 response to the client.
-	// Importantly, we then return from the handler. If we don't return the handler
-	// would keep executing and also write the "Hello from SnippetBox" message.
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
-
 	s, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -43,6 +35,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	s, err := app.snippets.Get(id)
+	fmt.Println(err)
 	if err == models.ErrNoRecord {
 		app.notFound(w)
 		return
@@ -58,16 +51,28 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request, ps h
 
 // Add a createSnippet handler function.
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Parse request body
 	if err := r.ParseForm(); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-	expires := r.PostForm.Get("expires")
+	// Create snippet struct
+	expires, _ := strconv.Atoi(r.PostForm.Get("expires"))
+	snippet := &models.SnippetValidator{
+		Title:   r.PostForm.Get("title"),
+		Content: r.PostForm.Get("content"),
+		Expires: expires,
+	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	// Do Validation
+	if err := models.ValidateSnippet(snippet); err != nil {
+		fmt.Fprint(w, err.Error())
+		return
+	}
+
+	// Insert to database
+	id, err := app.snippets.Insert(snippet.Title, snippet.Content, snippet.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
