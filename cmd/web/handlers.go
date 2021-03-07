@@ -5,55 +5,54 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gin-gonic/gin"
 
 	"masrurimz/snippetbox/pkg/models"
 )
 
-// Define a home handler function which writes a byte slice containing
-// "Hello from Snippetbox" as the response body.
-// Change the signature of the home handler so it is defined as a method against
-// *application.
-func (app *application) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// home handle home routes then display home page
+// which contain all latest not expired snippets
+func (app *application) home(c *gin.Context) {
 	s, err := app.snippets.Latest()
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
-	app.render(w, r, "home.page.tmpl", &templateData{
+	app.render(c, "home.page.tmpl", &templateData{
 		Snippets: s,
 	})
 }
 
 // Add a showSnippet handler function.
-func (app *application) showSnippet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id, err := strconv.Atoi(ps.ByName("id"))
+func (app *application) showSnippet(c *gin.Context) {
+	id, err := strconv.Atoi(c.Params.ByName("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	s, err := app.snippets.Get(id)
 	fmt.Println(err)
 	if err == models.ErrNoRecord {
-		app.notFound(w)
+		app.notFound(c)
 		return
 	} else if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
-	app.render(w, r, "show.page.tmpl", &templateData{
+	app.render(c, "show.page.tmpl", &templateData{
 		Snippet: s,
 	})
 }
 
 // Add a createSnippet handler function.
-func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) createSnippet(c *gin.Context) {
+	r := *c.Request
 	// Parse request body
 	if err := r.ParseForm(); err != nil {
-		app.clientError(w, http.StatusBadRequest)
+		app.clientError(c, http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ 
 
 	// Do Validation
 	if err := models.ValidateSnippet(snippet); err != nil {
-		app.render(w, r, "create.page.tmpl", &templateData{
+		app.render(c, "create.page.tmpl", &templateData{
 			FormData: r.PostForm,
 			FormErrors: map[string]string{
 				"title":   err["SnippetValidator.Title"],
@@ -81,13 +80,13 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request, _ 
 	// Insert to database
 	id, err := app.snippets.Insert(snippet.Title, snippet.Content, snippet.Expires)
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet/show/%d", id), http.StatusSeeOther)
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/snippet/show/%d", id))
 }
 
-func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	app.render(w, r, "create.page.tmpl", nil)
+func (app *application) createSnippetForm(c *gin.Context) {
+	app.render(c, "create.page.tmpl", nil)
 }

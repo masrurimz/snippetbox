@@ -5,12 +5,11 @@ import (
 	"flag"
 	"html/template"
 	"log"
-	"net/http"
 	"os"
 
-	"masrurimz/snippetbox/pkg/models/mysql"
-
 	_ "github.com/go-sql-driver/mysql"
+
+	"masrurimz/snippetbox/pkg/models/mysql"
 )
 
 // Define an application struct to hold the application-wide dependencies for the
@@ -70,19 +69,21 @@ func main() {
 		templateCache: templateCache,
 	}
 
+	srv := app.routes()
+
 	// Initialize a new http.Server struct. We set the Addr and Handler fields so
 	// that the server uses the same network address and routes as before, and set
 	// the ErrorLog field so that the server now uses the custom errorLog logger in
 	// the event of any problems.
-	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
-	}
+	// srv := &http.Server{
+	// 	Addr:     *addr,
+	// 	ErrorLog: errorLog,
+	// 	Handler:  app.routes(),
+	// }
 
 	infoLog.Printf("Starting server on :4000")
 
-	err = srv.ListenAndServe()
+	err = srv.Run(*addr)
 	errorLog.Fatal(err)
 }
 

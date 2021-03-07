@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func (app *application) addDefauldData(td *templateData, r *http.Request) *templateData {
+func (app *application) addDefauldData(td *templateData, c *gin.Context) *templateData {
 	if td == nil {
 		td = &templateData{}
 	}
@@ -20,46 +22,48 @@ func (app *application) addDefauldData(td *templateData, r *http.Request) *templ
 
 // The serverError helper writes an error message and stack trace to the errorLog,
 // then sends a generic 500 Internal Server Error response to the user.
-func (app *application) serverError(w http.ResponseWriter, err error) {
+func (app *application) serverError(c *gin.Context, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 
 	app.errorLog.Output(2, trace)
 
-	http.Error(w,
-		http.StatusText(http.StatusInternalServerError),
-		http.StatusInternalServerError)
+	c.AbortWithError(
+		http.StatusInternalServerError,
+		err,
+	)
 }
 
 // The clientError helper sends a specific status code and corresponding description
 // to the user. We'll use this later in the book to send responses like 400 "Bad
 // Request" when there's a problem with the request that the user sent.
-func (app *application) clientError(w http.ResponseWriter, status int) {
-	http.Error(w, http.StatusText(status), status)
+func (app *application) clientError(c *gin.Context, status int) {
+	c.AbortWithStatus(status)
+	// http.Error(w, http.StatusText(status), status)
 }
 
 // For consistency, we'll also implement a notFound helper. This is simply a
 // convenience wrapper around clientError which sends a 404 Not Found response to
 // the user.
-func (app *application) notFound(w http.ResponseWriter) {
-	app.clientError(w, http.StatusNotFound)
+func (app *application) notFound(c *gin.Context) {
+	app.clientError(c, http.StatusNotFound)
 }
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
+func (app *application) render(c *gin.Context, name string, td *templateData) {
 	// Retrieve cached template using name as keyword
 	ts, ok := app.templateCache[name]
 	if !ok {
-		app.serverError(w, fmt.Errorf("The template %s dose not exist", name))
+		app.serverError(c, fmt.Errorf("The template %s dose not exist", name))
 		return
 	}
 
 	// Render template with dynamic data to buffer
 	buf := new(bytes.Buffer)
-	err := ts.Execute(buf, app.addDefauldData(td, r))
+	err := ts.Execute(buf, app.addDefauldData(td, c))
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(c, err)
 		return
 	}
 
 	// If no template error then pass rendered data to client
-	buf.WriteTo(w)
+	buf.WriteTo(c.Writer)
 }
