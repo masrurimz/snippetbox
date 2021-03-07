@@ -47,27 +47,19 @@ func (app *application) showSnippet(c *gin.Context) {
 	})
 }
 
-// Add a createSnippet handler function.
+// Login blbala
+type Login struct {
+	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
+	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
 func (app *application) createSnippet(c *gin.Context) {
-	r := *c.Request
-	// Parse request body
-	if err := r.ParseForm(); err != nil {
-		app.clientError(c, http.StatusBadRequest)
-		return
-	}
+	var form models.SnippetValidator
 
-	// Create snippet struct
-	expires, _ := strconv.Atoi(r.PostForm.Get("expires"))
-	snippet := &models.SnippetValidator{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
-	}
-
-	// Do Validation
-	if err := models.ValidateSnippet(snippet); err != nil {
+	// Do validation
+	if err := models.ValidateSnippet(c, form); err != nil {
 		app.render(c, "create.page.tmpl", &templateData{
-			FormData: r.PostForm,
+			FormData: c.Request.PostForm,
 			FormErrors: map[string]string{
 				"title":   err["SnippetValidator.Title"],
 				"content": err["SnippetValidator.Content"],
@@ -78,7 +70,7 @@ func (app *application) createSnippet(c *gin.Context) {
 	}
 
 	// Insert to database
-	id, err := app.snippets.Insert(snippet.Title, snippet.Content, snippet.Expires)
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(c, err)
 		return

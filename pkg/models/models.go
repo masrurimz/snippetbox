@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -25,9 +27,9 @@ type Snippet struct {
 
 // SnippetValidator struct to be used with golang validator
 type SnippetValidator struct {
-	Title   string `validate:"required,lt=100"`
-	Content string `validate:"required"`
-	Expires int    `validate:"required,eq=1|eq=7|eq=365"`
+	Title   string `form:"title" json:"title" binding:"required,lt=100"`
+	Content string `form:"content" json:"content" binding:"required"`
+	Expires int    `form:"expires" json:"expires" binding:"required,eq=1|eq=7|eq=365"`
 }
 
 var (
@@ -36,15 +38,20 @@ var (
 )
 
 // ValidateSnippet validate snippet model
-func ValidateSnippet(s *SnippetValidator) validator.ValidationErrorsTranslations {
+func ValidateSnippet(c *gin.Context, s SnippetValidator) validator.ValidationErrorsTranslations {
+	v, ok := binding.Validator.Engine().(*validator.Validate)
+
+	if !ok {
+		return nil
+	}
+
 	english := en.New()
 	uni := ut.New(english, english)
 	trans, _ := uni.GetTranslator("en")
 
-	validate := validator.New()
-	en_translations.RegisterDefaultTranslations(validate, trans)
+	en_translations.RegisterDefaultTranslations(v, trans)
 
-	if err := validate.Struct(s); err != nil {
+	if err := c.ShouldBind(&s); err != nil {
 		errs := err.(validator.ValidationErrors).Translate(trans)
 
 		if _, ok := err.(*validator.InvalidValidationError); ok {
