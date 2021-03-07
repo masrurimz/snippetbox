@@ -57,7 +57,7 @@ func (app *application) createSnippet(c *gin.Context) {
 	var form models.SnippetValidator
 
 	// Do validation
-	if err := models.ValidateSnippet(c, form); err != nil {
+	if err := models.ValidateSnippet(c, &form); err != nil {
 		app.render(c, "create.page.tmpl", &templateData{
 			FormData: c.Request.PostForm,
 			FormErrors: map[string]string{
@@ -68,6 +68,8 @@ func (app *application) createSnippet(c *gin.Context) {
 		})
 		return
 	}
+
+	fmt.Println(form)
 
 	// Insert to database
 	id, err := app.snippets.Insert(&form)

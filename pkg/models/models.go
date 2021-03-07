@@ -38,7 +38,7 @@ var (
 )
 
 // ValidateSnippet validate snippet model
-func ValidateSnippet(c *gin.Context, s SnippetValidator) validator.ValidationErrorsTranslations {
+func ValidateSnippet(c *gin.Context, s *SnippetValidator) validator.ValidationErrorsTranslations {
 	v, ok := binding.Validator.Engine().(*validator.Validate)
 
 	if !ok {
