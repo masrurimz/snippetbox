@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
 	"masrurimz/snippetbox/pkg/models"
@@ -33,7 +34,6 @@ func (app *application) showSnippet(c *gin.Context) {
 	}
 
 	s, err := app.snippets.Get(id)
-	fmt.Println(err)
 	if err == models.ErrNoRecord {
 		app.notFound(c)
 		return
@@ -69,14 +69,16 @@ func (app *application) createSnippet(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(form)
-
 	// Insert to database
 	id, err := app.snippets.Insert(&form)
 	if err != nil {
 		app.serverError(c, err)
 		return
 	}
+
+	session := sessions.Default(c)
+	session.Set("flash", "Snippet successfully created!")
+	session.Save()
 
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/snippet/show/%d", id))
 }

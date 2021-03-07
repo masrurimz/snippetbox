@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-contrib/sessions/cookie"
+
 	_ "github.com/go-sql-driver/mysql"
 
 	"masrurimz/snippetbox/pkg/models/mysql"
@@ -18,31 +20,25 @@ import (
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
+	store         *cookie.Store
 	snippets      *mysql.SnippetModel
 	templateCache map[string]*template.Template
 }
 
 func main() {
 	// Define a new command-line flag with the name 'addr', a default value of ":4000"
-	// and some short help text explaining what the flag controls. The value of the
-	// flag will be stored in the addr variable at runtime.
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
 	// Define a new command-line flag for the MySQL DSN string.
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
 
+	// Define new command-line flag with the name 'secret' as secretKey for session
+
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	// Importantly, we use the flag.Parse() function to parse the command-line flag.
-	// This reads in the command-line flag value and assigns it to the addr
-	// variable. You need to call this *before* you use the addr variable
-	// otherwise it will always contain the default value of ":4000". If any errors are
-	// encountered during parsing the application will be terminated.
 	flag.Parse()
 
 	// Use log.New() to create a logger for writing information messages. This takes
-	// three parameters: the destination to write the logs to (os.Stdout), a string
-	// prefix for message (INFO followed by a tab), and flags to indicate what
-	// additional information to include (local date and time). Note that the flags
-	// are joined using the bitwise OR operator |.
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
 	// Create error mesage logger using stderr and enable file name and line flag (Lshortfile)
@@ -61,25 +57,19 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Initialize session
+	store := cookie.NewStore([]byte(*secret))
+
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
+		store:         &store,
 		snippets:      &mysql.SnippetModel{DB: db},
 		templateCache: templateCache,
 	}
 
 	srv := app.routes()
-
-	// Initialize a new http.Server struct. We set the Addr and Handler fields so
-	// that the server uses the same network address and routes as before, and set
-	// the ErrorLog field so that the server now uses the custom errorLog logger in
-	// the event of any problems.
-	// srv := &http.Server{
-	// 	Addr:     *addr,
-	// 	ErrorLog: errorLog,
-	// 	Handler:  app.routes(),
-	// }
 
 	infoLog.Printf("Starting server on :4000")
 

@@ -7,12 +7,23 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
 func (app *application) addDefauldData(td *templateData, c *gin.Context) *templateData {
 	if td == nil {
 		td = &templateData{}
+	}
+
+	// Access cookie
+	session := sessions.Default(c)
+	flash := session.Get("flash")
+	session.Delete("flash")
+	session.Save()
+
+	if flash != nil {
+		td.Flash = fmt.Sprint(flash)
 	}
 
 	td.CurrentYear = time.Now().Year()
