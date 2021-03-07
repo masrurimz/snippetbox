@@ -12,11 +12,11 @@ type SnippetModel struct {
 }
 
 // Insert will insert a new snippet into the database.
-func (m *SnippetModel) Insert(title, content string, expires int) (int, error) {
+func (m *SnippetModel) Insert(s *models.SnippetValidator) (int, error) {
 	stmt := `INSERT INTO snippets (title, content, created, expires)
 	VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 
-	result, err := m.DB.Exec(stmt, title, content, expires)
+	result, err := m.DB.Exec(stmt, s.Title, s.Content, s.Expires)
 	if err != nil {
 		return 0, err
 	}

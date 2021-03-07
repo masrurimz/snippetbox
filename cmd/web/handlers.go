@@ -70,7 +70,7 @@ func (app *application) createSnippet(c *gin.Context) {
 	}
 
 	// Insert to database
-	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+	id, err := app.snippets.Insert(&form)
 	if err != nil {
 		app.serverError(c, err)
 		return
