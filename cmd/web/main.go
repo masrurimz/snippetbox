@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-contrib/sessions/cookie"
@@ -69,11 +71,21 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	srv := app.routes()
+	// New TLS config
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
+	srv := &http.Server{
+		Addr:      *addr,
+		Handler:   app.routes(),
+		TLSConfig: tlsConfig,
+	}
 
 	infoLog.Printf("Starting server on :4000")
 
-	err = srv.RunTLS(*addr, "./tls/cert.pem", "./tls/key.pem")
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
