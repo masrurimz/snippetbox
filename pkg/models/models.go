@@ -66,32 +66,28 @@ type SnippetValidator struct {
 	Expires int    `form:"expires" json:"expires" binding:"required,eq=1|eq=7|eq=365"`
 }
 
-var (
-	uni      *ut.UniversalTranslator
-	validate *validator.Validate
-)
-
 // ValidateSnippet validate snippet model
 func ValidateSnippet(c *gin.Context, s *SnippetValidator) validator.ValidationErrorsTranslations {
 	return validate(c, s)
 }
 
-	english := en.New()
-	uni := ut.New(english, english)
-	trans, _ := uni.GetTranslator("en")
+// User struct model for authentication
+type User struct {
+	ID             int
+	Name           string
+	Email          string
+	HashedPassword []byte
+	Created        time.Time
+}
 
-	en_translations.RegisterDefaultTranslations(v, trans)
+// UserValidator struct for validate user account form input
+type UserValidator struct {
+	Name     string `form:"name" json:"name" binding:"required,lt=255"`
+	Email    string `form:"email" json:"email" binding:"required,lt=255"`
+	Password string `form:"password" json:"password" binding:"required,lt=60,gt=6"`
+}
 
-	if err := c.ShouldBind(&s); err != nil {
-		errs := err.(validator.ValidationErrors).Translate(trans)
-
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			fmt.Println(err)
-			return errs
-		}
-
-		return errs
-	}
-
-	return nil
+// ValidateUser validate user form data
+func ValidateUser(c *gin.Context, user *UserValidator) validator.ValidationErrorsTranslations {
+	return validate(c, user)
 }

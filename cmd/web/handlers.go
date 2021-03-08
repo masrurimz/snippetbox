@@ -47,12 +47,6 @@ func (app *application) showSnippet(c *gin.Context) {
 	})
 }
 
-// Login blbala
-type Login struct {
-	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
-	Password string `form:"password" json:"password" xml:"password" binding:"required"`
-}
-
 func (app *application) createSnippet(c *gin.Context) {
 	var form models.SnippetValidator
 
@@ -87,12 +81,46 @@ func (app *application) createSnippetForm(c *gin.Context) {
 	app.render(c, "create.page.tmpl", nil)
 }
 
+// Login blbala
+type Login struct {
+	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
+	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
 func (app *application) signupUserForm(c *gin.Context) {
-	c.String(http.StatusOK, "Display the user signup form...")
+	app.render(c, "signup.page.tmpl", nil)
 }
 
 func (app *application) signupUser(c *gin.Context) {
-	c.String(http.StatusOK, "Create a new user")
+	var form models.UserValidator
+
+	// Do validation
+	if err := models.ValidateUser(c, &form); err != nil {
+		app.render(c, "signup.page.tmpl", &templateData{
+			FormData: c.Request.PostForm,
+			FormErrors: map[string]string{
+				"name":     err["UserValidator.Name"],
+				"email":    err["UserValidator.Email"],
+				"password": err["UserValidator.Password"],
+			},
+		})
+		return
+	}
+
+	c.String(http.StatusOK, "Create new user...")
+
+	// // Insert to database
+	// id, err := app.snippets.Insert(&form)
+	// if err != nil {
+	// 	app.serverError(c, err)
+	// 	return
+	// }
+
+	// session := sessions.Default(c)
+	// session.Set("flash", "Snippet successfully created!")
+	// session.Save()
+
+	// c.Redirect(http.StatusSeeOther, fmt.Sprintf("/snippet/show/%d", id))
 }
 
 func (app *application) loginUserForm(c *gin.Context) {
