@@ -73,7 +73,7 @@ func main() {
 
 	infoLog.Printf("Starting server on :4000")
 
-	err = srv.Run(*addr)
+	err = srv.RunTLS(*addr, "./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
