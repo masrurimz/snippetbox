@@ -86,3 +86,23 @@ func (app *application) createSnippet(c *gin.Context) {
 func (app *application) createSnippetForm(c *gin.Context) {
 	app.render(c, "create.page.tmpl", nil)
 }
+
+func (app *application) signupUserForm(c *gin.Context) {
+	c.String(http.StatusOK, "Display the user signup form...")
+}
+
+func (app *application) signupUser(c *gin.Context) {
+	c.String(http.StatusOK, "Create a new user")
+}
+
+func (app *application) loginUserForm(c *gin.Context) {
+	c.String(http.StatusOK, "Display the user login form...")
+}
+
+func (app *application) loginUser(c *gin.Context) {
+	c.String(http.StatusOK, "Authenticate and login the user...")
+}
+
+func (app *application) logoutUser(c *gin.Context) {
+	c.String(http.StatusOK, "Logout the user...")
+}

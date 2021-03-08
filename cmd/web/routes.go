@@ -11,9 +11,22 @@ func (app *application) routes() *gin.Engine {
 	r.Use(sessions.Sessions("mysession", *app.store))
 
 	r.GET("/", app.home)
-	r.GET("/snippet/show/:id", app.showSnippet)
-	r.GET("/snippet/create", app.createSnippetForm)
-	r.POST("/snippet/create", app.createSnippet)
+
+	snippet := r.Group("/snippet")
+	{
+		snippet.GET("/show/:id", app.showSnippet)
+		snippet.GET("/create", app.createSnippetForm)
+		snippet.POST("/create", app.createSnippet)
+	}
+
+	auth := r.Group("/user")
+	{
+		auth.GET("/signup", app.signupUserForm)
+		auth.POST("/signup", app.signupUser)
+		auth.GET("/login", app.loginUserForm)
+		auth.POST("/login", app.loginUser)
+		auth.GET("/logout", app.logoutUser)
+	}
 
 	r.Static("/static", "./ui/static")
 	return r
