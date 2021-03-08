@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/sessions/cookie"
 
@@ -78,9 +79,12 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:      *addr,
-		Handler:   app.routes(),
-		TLSConfig: tlsConfig,
+		Addr:         *addr,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	infoLog.Printf("Starting server on :4000")
