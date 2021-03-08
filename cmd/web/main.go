@@ -14,6 +14,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"masrurimz/snippetbox/pkg/models"
 	"masrurimz/snippetbox/pkg/models/mysql"
 )
 
@@ -62,6 +63,11 @@ func main() {
 
 	// Initialize session
 	store := cookie.NewStore([]byte(*secret))
+
+	// Initialoze translator
+	if ok := models.TranslatorSetup(); !ok {
+		errorLog.Fatal("Error initialize translator")
+	}
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{

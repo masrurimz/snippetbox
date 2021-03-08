@@ -14,7 +14,41 @@ import (
 )
 
 // ErrNoRecord Error message for no database records with the given ID
-var ErrNoRecord = errors.New("models: no matching record found")
+var (
+	ErrNoRecord          = errors.New("models: no matching record found")
+	ErrInvalidCredential = errors.New("models: invalid credential")
+	ErrDuplicatedEmail   = errors.New("models: duplicated email")
+)
+
+var (
+	trans ut.Translator
+)
+
+// TranslatorSetup initiate translator config
+func TranslatorSetup() bool {
+	en := en.New()
+	uni := ut.New(en, en)
+	trans, _ = uni.GetTranslator("en")
+	valid, ok := binding.Validator.Engine().(*validator.Validate)
+
+	en_translations.RegisterDefaultTranslations(valid, trans)
+
+	return ok
+}
+
+func validate(c *gin.Context, vs interface{}) validator.ValidationErrorsTranslations {
+	if err := c.ShouldBind(vs); err != nil {
+		errs := err.(validator.ValidationErrors).Translate(trans)
+
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			fmt.Println(err)
+			return errs
+		}
+
+		return errs
+	}
+	return nil
+}
 
 // Snippet struct model
 type Snippet struct {
@@ -39,11 +73,8 @@ var (
 
 // ValidateSnippet validate snippet model
 func ValidateSnippet(c *gin.Context, s *SnippetValidator) validator.ValidationErrorsTranslations {
-	v, ok := binding.Validator.Engine().(*validator.Validate)
-
-	if !ok {
-		return nil
-	}
+	return validate(c, s)
+}
 
 	english := en.New()
 	uni := ut.New(english, english)
