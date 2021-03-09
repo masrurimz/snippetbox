@@ -153,6 +153,8 @@ func (app *application) loginUser(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set("userID", id)
+	session.Set("flash", "You have been logged in")
+
 	session.Save()
 
 	c.Redirect(http.StatusSeeOther, "/snippet/create")

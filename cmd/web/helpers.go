@@ -20,10 +20,13 @@ func (app *application) addDefauldData(td *templateData, c *gin.Context) *templa
 	session := sessions.Default(c)
 	flash := session.Get("flash")
 	session.Delete("flash")
+
+	td.AuthenticatedUser = app.authenticateUser(c)
+
 	session.Save()
 
 	if flash != nil {
-		td.Flash = fmt.Sprint(flash)
+		td.Flash = flash.(string)
 	}
 
 	td.CurrentYear = time.Now().Year()
@@ -77,4 +80,14 @@ func (app *application) render(c *gin.Context, name string, td *templateData) {
 
 	// If no template error then pass rendered data to client
 	buf.WriteTo(c.Writer)
+}
+
+func (app *application) authenticateUser(c *gin.Context) int {
+	user := sessions.Default(c).Get("userID")
+
+	if user != nil {
+		return user.(int)
+	}
+
+	return 0
 }
