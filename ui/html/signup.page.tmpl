@@ -16,7 +16,7 @@
       {{with .FormErrors.email}}
         <label class='error'>{{.}}</label>
       {{end}}
-      <input type='email' name='email'>
+      <input type='email' name='email' value='{{.FormData.Get "email"}}'>
     </div>
     <div>
       <label>Password :</label>

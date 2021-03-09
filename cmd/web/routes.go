@@ -25,7 +25,7 @@ func (app *application) routes() *gin.Engine {
 		auth.POST("/signup", app.signupUser)
 		auth.GET("/login", app.loginUserForm)
 		auth.POST("/login", app.loginUser)
-		auth.GET("/logout", app.logoutUser)
+		auth.POST("/logout", app.logoutUser)
 	}
 
 	r.Static("/static", "./ui/static")

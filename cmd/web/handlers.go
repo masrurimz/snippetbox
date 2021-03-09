@@ -107,30 +107,64 @@ func (app *application) signupUser(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, "Create new user...")
+	// Insert to database
+	_, err := app.users.Insert(&form)
+	if err == models.ErrDuplicatedEmail {
+		app.render(c, "signup.page.tmpl", &templateData{
+			FormData: c.Request.Form,
+			FormErrors: map[string]string{
+				"email": "Email already in use",
+			},
+		})
+		return
+	} else if err != nil {
+		app.serverError(c, err)
+		return
+	}
 
-	// // Insert to database
-	// id, err := app.snippets.Insert(&form)
-	// if err != nil {
-	// 	app.serverError(c, err)
-	// 	return
-	// }
+	session := sessions.Default(c)
+	session.Set("flash", "Registration successfull. Please log in")
+	session.Save()
 
-	// session := sessions.Default(c)
-	// session.Set("flash", "Snippet successfully created!")
-	// session.Save()
-
-	// c.Redirect(http.StatusSeeOther, fmt.Sprintf("/snippet/show/%d", id))
+	c.Redirect(http.StatusSeeOther, "/user/login")
 }
 
 func (app *application) loginUserForm(c *gin.Context) {
-	c.String(http.StatusOK, "Display the user login form...")
+	app.render(c, "login.page.tmpl", nil)
 }
 
 func (app *application) loginUser(c *gin.Context) {
-	c.String(http.StatusOK, "Authenticate and login the user...")
+	var user models.UserValidator
+	c.ShouldBind(&user) //Parse form
+
+	id, err := app.users.Authenticate(&user)
+
+	if err == models.ErrInvalidCredential {
+		app.render(c, "login.page.tmpl", &templateData{
+			FormData: c.Request.PostForm,
+			FormErrors: map[string]string{
+				"generic": "Email or Password is incorrect",
+			},
+		})
+		return
+	} else if err != nil {
+		app.serverError(c, err)
+	}
+
+	session := sessions.Default(c)
+	session.Set("userID", id)
+	session.Save()
+
+	c.Redirect(http.StatusSeeOther, "/snippet/create")
 }
 
 func (app *application) logoutUser(c *gin.Context) {
-	c.String(http.StatusOK, "Logout the user...")
+	session := sessions.Default(c)
+
+	session.Delete("userID")
+	session.Set("flash", "You have been logged out successfully!")
+
+	session.Save()
+
+	c.Redirect(http.StatusSeeOther, "/")
 }
